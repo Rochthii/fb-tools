@@ -1,33 +1,21 @@
-# fb-tools — Facebook Page Automation
+# fb-tools
 
-Auto post bài lên Facebook Page **Bài Học Hôm Nay** bằng Composio CLI + Gemini AI.
-
-## Tính năng
-
-| Script | Mô tả |
-|--------|-------|
-| `auto-post.sh` | 🤖 Tự động: chọn chủ đề → làm thơ → tạo ảnh → đăng |
-| `comment-post.sh` | Bình luận dưới bài viết (kèm link/ảnh) |
-| `post-text.sh` | Đăng bài text |
-| `post-image.sh` | Tạo ảnh Gemini + đăng kèm bài |
-| `quick-post.sh` | Đăng nhanh 1 câu |
-| `schedule.sh` | Hẹn giờ đăng bài |
-| `post-carousel.sh` | Tạo album nhiều ảnh |
-| `edit-post.sh` | Sửa bài đã đăng |
-| `ai-poem.sh` | Nhập chủ đề → tự viết thơ + vẽ ảnh + đăng |
-| `list-pages.sh` | Xem danh sách Page |
+Auto đăng thơ + ảnh lên Facebook Page **Bài Học Hôm Nay** — chạy GitHub Actions, không cần mở máy.
 
 ## Setup
 
-1. **Clone repo**
-2. **Tạo GitHub Secret:** `COMPOSIO_API_KEY` (lấy từ https://dashboard.composio.dev/settings)
-3. Workflow sẽ tự động đăng mỗi ngày lúc **7h sáng (giờ VN)**
-4. Có thể chạy tay từ tab **Actions** → **FB Auto Post** → **Run workflow**
+1. **Vào GitHub → Settings → Secrets → Actions → New secret**
+   - Name: `COMPOSIO_API_KEY`
+   - Secret: *(lấy từ https://dashboard.composio.dev/settings)*
+
+2. Workflow tự động chạy **7h sáng + 7h tối** mỗi ngày
+
+3. Chạy tay: tab **Actions** → **FB Auto Post** → **Run workflow**
 
 ## Chạy local (WSL)
 
 ```bash
-cd scripts
-./auto-post.sh        # tự động
-./post-text.sh        # đăng text
+git clone https://github.com/Rochthii/fb-tools.git ~/fb-tools
+cd ~/fb-tools/scripts
+./auto-post.sh
 ```
