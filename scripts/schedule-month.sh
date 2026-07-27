@@ -347,7 +347,8 @@ try:
     data = d.get('data', d)
     if isinstance(data, str):
         data = json.loads(data)
-    print(data.get('id', '') or data.get('event_id', '') or 'unknown')
+    rd = data.get('response_data', {})
+    print(rd.get('id', '') or data.get('id', '') or 'unknown')
 except: print('unknown')
 " 2>/dev/null)
 
