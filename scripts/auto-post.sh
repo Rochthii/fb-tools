@@ -13,25 +13,40 @@ warn() { echo "[CANH BAO] $*" >&2; }
 [ ! -x "$COMPOSIO" ]  && warn "COMPOSIO ($COMPOSIO) khong ton tai hoac khong the chay — thu dung 'composio'"
 type python3 &>/dev/null || die "python3 chua duoc cai dat"
 
-echo "=== viết vội vài câu ==="
+echo "=== $PROJECT_NAME ==="
 
 # ---- 1. Chọn thể loại + chủ đề (có fallback) ----
 echo "1. Chon the loai..."
 
-FALLBACK_GENRES=("tho_tinh" "tho_cuoc_song" "tho_vui" "danh_ngon")
-FALLBACK_TOPICS=("ngay mua nho ai" "ca phe sang" "tha thinh" "cuoc song")
+if [ -n "$1" ] && [ -n "$2" ]; then
+  GENRE="$1"
+  TOPIC="$2"
+  LABEL=$(python3 -c "
+import json, sys
+try:
+    with open('$DIR/themes.json', encoding='utf-8') as f:
+        themes = json.load(f)
+    print(themes.get('$1', {}).get('label', '$1'))
+except:
+    print('$1')
+" 2>/dev/null)
+  [ -z "$LABEL" ] && LABEL="$GENRE"
+  echo "  (from schedule) $LABEL : $TOPIC"
+else
+  FALLBACK_GENRES=("tho_tinh" "tho_cuoc_song" "tho_vui" "danh_ngon")
+  FALLBACK_TOPICS=("ngay mua nho ai" "ca phe sang" "tha thinh" "cuoc song")
 
-select_genre_fallback() {
-  local i=$((RANDOM % ${#FALLBACK_GENRES[@]}))
-  GENRE="${FALLBACK_GENRES[$i]}"
-  TOPIC="${FALLBACK_TOPICS[$i]}"
-  LABEL="$GENRE"
-  echo "  (fallback) $LABEL : $TOPIC"
-}
+  select_genre_fallback() {
+    local i=$((RANDOM % ${#FALLBACK_GENRES[@]}))
+    GENRE="${FALLBACK_GENRES[$i]}"
+    TOPIC="${FALLBACK_TOPICS[$i]}"
+    LABEL="$GENRE"
+    echo "  (fallback) $LABEL : $TOPIC"
+  }
 
-SELECTION=""
-if [ -f "$DIR/themes.json" ] && [ -s "$DIR/themes.json" ]; then
-  SELECTION=$(python3 -c "
+  SELECTION=""
+  if [ -f "$DIR/themes.json" ] && [ -s "$DIR/themes.json" ]; then
+    SELECTION=$(python3 -c "
 import json, random, sys
 try:
     with open('$DIR/themes.json', encoding='utf-8') as f:
@@ -52,16 +67,17 @@ topic = random.choice(themes[genre]['topics'])
 label = themes[genre].get('label', genre)
 print(f'{genre}|{topic}|{label}')
 " 2>/dev/null)
-fi
+  fi
 
-if [ -n "$SELECTION" ] && echo "$SELECTION" | grep -q '|'; then
-  GENRE=$(echo "$SELECTION" | cut -d'|' -f1)
-  TOPIC=$(echo "$SELECTION" | cut -d'|' -f2)
-  LABEL=$(echo "$SELECTION" | cut -d'|' -f3)
-  echo "  => $LABEL : $TOPIC"
-else
-  warn "themes.json loi hoac trong — dung fallback"
-  select_genre_fallback
+  if [ -n "$SELECTION" ] && echo "$SELECTION" | grep -q '|'; then
+    GENRE=$(echo "$SELECTION" | cut -d'|' -f1)
+    TOPIC=$(echo "$SELECTION" | cut -d'|' -f2)
+    LABEL=$(echo "$SELECTION" | cut -d'|' -f3)
+    echo "  => $LABEL : $TOPIC"
+  else
+    warn "themes.json loi hoac trong — dung fallback"
+    select_genre_fallback
+  fi
 fi
 
 # ---- 2. Build prompt + gọi AI (có fallback nếu lỗi) ----
