@@ -1,12 +1,9 @@
 name: Schedule Month
 
 on:
+  schedule:
+    - cron: '0 0 1 * *'
   workflow_dispatch:
-    inputs:
-      force:
-        description: 'Xoa lich cu va tao moi (yes/no)'
-        required: false
-        default: 'no'
 
 jobs:
   schedule:

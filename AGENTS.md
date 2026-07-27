@@ -51,8 +51,16 @@ fb-tools/
 
 ## Scheduled workflows
 
-- **auto-post.yml** → chạy cron `0 0,6,12,18 * * *` (4 lần/ngày), gọi `agent.sh`
-- **schedule-month.yml** → chạy manual (`workflow_dispatch`), gọi `schedule-month.sh`
+- **schedule-month.yml** → cron `0 0 1 * *` (mùng 1 mỗi tháng) + manual trigger, gọi `schedule-month.sh`
+- **auto-post.yml** → cron `0 * * * *` (mỗi giờ), gọi `agent.sh`
+
+## Tự động hoá
+
+**Chạy lần đầu:** Chỉ cần chạy `Schedule Month` workflow (hoặc `bash scripts/schedule-month.sh`) một lần. Sau đó:
+- Mùng 1 mỗi tháng → tự động lập lịch 30 ngày mới
+- Mỗi giờ → agent.sh đọc Calendar → nếu có event trong khung giờ → đăng bài
+- agent.sh tự kiểm tra "đã post hôm nay chưa" → không post trùng
+- agent.sh chỉ post khi giờ hiện tại khớp với giờ event (±2h)
 
 ## Các hạng mục đã làm
 

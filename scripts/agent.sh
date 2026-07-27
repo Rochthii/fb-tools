@@ -13,10 +13,24 @@ type python3 &>/dev/null || die "python3 chua duoc cai dat"
 
 echo "=== $PROJECT_NAME ==="
 
-# ---- 1. Read today's events from Google Calendar ----
-echo "1. Doc lich tu Google Calendar..."
+# ---- 0. Check if already posted today ----
+echo "1. Kiem tra lich su hom nay..."
 
 TODAY=$(date +%Y-%m-%d)
+CURRENT_HOUR=$(date +%H | sed 's/^0//')
+LOG_FILE="$DIR/../logs/posts.csv"
+
+ALREADY_POSTED=$(grep -c "^$TODAY" "$LOG_FILE" 2>/dev/null || echo "0")
+if [ "$ALREADY_POSTED" -gt 0 ]; then
+  echo "  Hom nay da post roi — skip."
+  echo ""
+  echo "=== Xong (skip) ==="
+  exit 0
+fi
+
+# ---- 1. Read today's events from Google Calendar ----
+echo "2. Doc lich tu Google Calendar..."
+
 TOMORROW=$(date -d "+1 day" +%Y-%m-%d)
 
 TIME_MIN="${TODAY}T00:00:00+07:00"
@@ -30,7 +44,7 @@ EVENTS_RAW=$($COMPOSIO execute GOOGLECALENDAR_EVENTS_LIST \
   --single_events true \
   2>/dev/null)
 
-SCHEDULE_ENTRY=$(echo "$EVENTS_RAW" | python3 -c "
+SCHEDULE_DATA=$(echo "$EVENTS_RAW" | python3 -c "
 import json, sys
 try:
     d = json.load(sys.stdin)
@@ -43,16 +57,44 @@ try:
         summary = item.get('summary', '')
         if summary.startswith(prefix):
             desc = item.get('description', '')
-            print(desc)
+            start = item.get('start', {}).get('dateTime', '')
+            print(f'DESC:{desc}')
+            print(f'START:{start}')
             break
 except:
     pass
 " 2>/dev/null)
 
+SCHEDULE_ENTRY=$(echo "$SCHEDULE_DATA" | grep "^DESC:" | sed 's/^DESC://')
+EVENT_START=$(echo "$SCHEDULE_DATA" | grep "^START:" | sed 's/^START://')
+
 if [ -z "$SCHEDULE_ENTRY" ]; then
   echo "  Khong co lich hom nay — dung random."
   echo ""
   exec bash "$DIR/auto-post.sh"
+fi
+
+# Check time window: only post if event hour matches current hour
+EVENT_HOUR=$(echo "$EVENT_START" | python3 -c "
+import sys, re
+s = sys.stdin.read().strip()
+# Parse RFC3339: 2026-08-01T18:00:00+07:00
+m = re.search(r'T(\d{2})', s)
+print(int(m.group(1)) if m else '')
+" 2>/dev/null)
+
+[ -z "$EVENT_HOUR" ] && EVENT_HOUR=-1
+
+# Allow posting within ±2 hours of scheduled time
+HOUR_DIFF=$((CURRENT_HOUR - EVENT_HOUR))
+[ "${HOUR_DIFF#-}" -gt 2 ] && HOUR_DIFF=99
+
+if [ "$HOUR_DIFF" -gt 2 ]; then
+  echo "  Gio hien tai ($CURRENT_HOUR) khong khop voi event ($EVENT_HOUR) — skip."
+  echo "  (Cho lan chay cron tiep theo)"
+  echo ""
+  echo "=== Xong (skip) ==="
+  exit 0
 fi
 
 # Parse schedule entry (JSON in description)
@@ -115,9 +157,10 @@ except:
 [ -z "$LABEL" ] && LABEL="$GENRE"
 
 echo "  Hom nay: $LABEL - $TOPIC"
+echo "  Gio: $EVENT_HOUR, Current: $CURRENT_HOUR"
 
-# ---- 2. Use pre-composed text if available, otherwise generate ----
-echo "2. Chuan bi noi dung..."
+# ---- 3. Use pre-composed text if available, otherwise generate ----
+echo "3. Chuan bi noi dung..."
 
 if [ -z "$POST_TEXT" ]; then
   echo "  (khong co text san — goi auto-post.sh)"
@@ -127,17 +170,17 @@ fi
 echo "  Noi dung da duoc soan san."
 echo "$POST_TEXT" > /tmp/ap_post.txt
 
-# ---- 3. Generate hashtags (use pre-composed or fallback) ----
+# ---- 4. Hashtag ----
 echo ""
-echo "3. Hashtag..."
+echo "4. Hashtag..."
 if [ -z "$HASHTAGS" ]; then
   HASHTAGS="#${LABEL// /} #tho #vietvoivaicau"
 fi
 echo "  $HASHTAGS"
 
-# ---- 4. Generate image ----
+# ---- 5. Generate image ----
 echo ""
-echo "4. Tao anh..."
+echo "5. Tao anh..."
 IMG_URL=""
 IMG_PROMPT_FINAL="${IMG_PROMPT:-$STYLE_IMAGE}"
 
@@ -173,9 +216,9 @@ else
   warn "Image gen that bai — tien hanh dang text-only"
 fi
 
-# ---- 5. Build post body ----
+# ---- 6. Build post body ----
 echo ""
-echo "5. Dang bai..."
+echo "6. Dang bai..."
 
 cp /tmp/ap_post.txt /tmp/ap_body.txt
 echo "" >> /tmp/ap_body.txt
@@ -231,10 +274,10 @@ else
   echo "  Post ID: $POST_ID"
 fi
 
-# ---- 6. Comment ----
+# ---- 7. Comment ----
 if [ -n "$POST_ID" ]; then
   echo ""
-  echo "6. Viet comment..."
+  echo "7. Viet comment..."
 
   COMMENT_RESULT=$($COMPOSIO execute GEMINI_GENERATE_CONTENT \
     -d '{"prompt":"Viet 1 cau binh luan bang tieng Viet that tu nhien, am ap cho bai tho Facebook vua dang. Giong nhu nguoi doc chia se cam nhan. Them 1-2 hashtag. Chi tra ve phan binh luan, khong giai thich.","model":"gemini-2.5-flash","temperature":0.7}' \
@@ -263,12 +306,11 @@ PYEOF
   fi
 fi
 
-# ---- 7. Log ----
+# ---- 8. Log ----
 echo ""
-echo "7. Ghi log..."
+echo "8. Ghi log..."
 LOG_DIR="$DIR/../logs"
 mkdir -p "$LOG_DIR" 2>/dev/null || true
-LOG_FILE="$LOG_DIR/posts.csv"
 if [ ! -f "$LOG_FILE" ]; then
   echo "date,genre,topic,post_id,post_preview" > "$LOG_FILE" 2>/dev/null || true
 fi
