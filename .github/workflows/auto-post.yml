@@ -25,4 +25,11 @@ jobs:
       - name: Auto Post
         env:
           COMPOSIO_API_KEY: ${{ secrets.COMPOSIO_API_KEY }}
-        run: bash scripts/auto-post.sh
+        run: |
+          echo "HOME=$HOME"
+          echo "PATH=$PATH"
+          command -v composio && echo "composio found at $(which composio)" || echo "composio NOT in PATH"
+          echo "--- scripts/ ---"
+          ls -la scripts/
+          echo "--- run auto-post.sh ---"
+          bash -x scripts/auto-post.sh 2>&1
