@@ -16,10 +16,17 @@ jobs:
           python-version: '3.11'
 
       - name: Install & Auth & Post
+        env:
+          COMPOSIO_INSTALL_PLUGINS: "0"
         run: |
           set -e
           curl -fsSL https://raw.githubusercontent.com/ComposioHQ/composio/next/install.sh | bash
-          export PATH="$HOME/.composio/bin:$PATH"
-          composio login --api-key "${{ secrets.COMPOSIO_API_KEY }}"
-          composio whoami
+          export PATH="$HOME/.composio:$PATH"
+          composio login --api-key "${{ secrets.COMPOSIO_API_KEY }}" || {
+            echo "Login failed, trying env var approach..."
+            echo "COMPOSIO_API_KEY=${{ secrets.COMPOSIO_API_KEY }}" >> $GITHUB_ENV
+          }
+          which composio
+          composio --version
+          composio whoami 2>/dev/null || true
           bash scripts/auto-post.sh
