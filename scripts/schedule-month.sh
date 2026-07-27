@@ -99,7 +99,8 @@ SCHEDULE_RAW=$($COMPOSIO execute GEMINI_GENERATE_CONTENT -d @/tmp/ag_schedule_pr
 COM_EXIT=$?
 echo "$SCHEDULE_RAW" > /tmp/ag_raw_response.json
 echo "$COM_EXIT" > /tmp/ag_exit_code.txt
-cat /tmp/ag_stderr.log >&2
+STDERR_LOG=$(cat /tmp/ag_stderr.log)
+[ -n "$STDERR_LOG" ] && echo "[STDERR] $STDERR_LOG"
 
 SCHEDULE_JSON=$(echo "$SCHEDULE_RAW" | python3 -c "
 import json, sys, re
@@ -126,6 +127,9 @@ SCHEDULE_COUNT=$(echo "$SCHEDULE_JSON" | python3 -c "import json,sys; print(len(
 
 if [ "$SCHEDULE_COUNT" -lt 30 ]; then
   warn "AI chi sinh duoc $SCHEDULE_COUNT ngay — can thao tac thu cong"
+  echo "[DEBUG] Exit code: $COM_EXIT"
+  echo "[DEBUG] Raw response (first 1000 chars):"
+  echo "$SCHEDULE_RAW" | python3 -c "import sys; print(sys.stdin.read()[:1000])" 2>/dev/null
   echo "$SCHEDULE_JSON" > "$SCHEDULE_FILE"
 else
   echo "  Da sinh lich cho $SCHEDULE_COUNT ngay."
