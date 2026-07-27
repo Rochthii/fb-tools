@@ -6,7 +6,7 @@ echo "=== Auto Post ==="
 
 echo "1. Viet noi dung..."
 $COMPOSIO execute GEMINI_GENERATE_CONTENT \
-  -d '{"prompt":"Ban la content creator cho Facebook Page Bai Hoc Hom Nay. Hay chon 1 chu de ngau nhien va viet bai dang hoan chinh 5-8 cau bang tieng Viet, am ap, truyen cam hung. Phan cuoi them 1 dong ANH: + prompt tao anh bang tieng Anh.","model":"gemini-2.5-flash","temperature":1.2}' \
+  -d '{"prompt":"Ban la content creator cho Facebook Page Bai Hoc Hom Nay. Hay chon 1 chu de ngau nhien va viet bai dang ngan gon 4-6 cau bang tieng Viet that tu nhien, am ap, truyen cam hung. Loi van muot ma, gan gui, viet nhu dang tro chuyen voi nguoi doc. Tranh tu gio tai, dung tu ngu doi thuong. Phan cuoi them 1 dong ANH: + prompt tao anh bang tieng Anh.","model":"gemini-2.5-flash","temperature":0.8}' \
   2>/dev/null > /tmp/ap_raw.json
 
 python3 << 'PYEOF'
