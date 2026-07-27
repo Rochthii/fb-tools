@@ -2,22 +2,25 @@ name: FB Auto Post
 
 on:
   schedule:
-    - cron: '0 0,12 * * *'       # 7h sáng + 7h tối giờ VN (UTC+7)
+    - cron: '0 0,6,12,18 * * *'
   workflow_dispatch:
 
 jobs:
-  auto-post:
+  post:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Composio CLI
-        run: curl -fsSL https://composio.dev/install | bash
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-      - name: Post to Facebook
-        env:
-          COMPOSIO_API_KEY: ${{ secrets.COMPOSIO_API_KEY }}
-        shell: bash
-        run: |
-          export PATH="$HOME/.composio:$PATH"
-          bash scripts/auto-post.sh
+      - name: Install Composio CLI
+        run: pip install composio-core
+
+      - name: Authenticate Composio
+        run: composio login --api-key "${{ secrets.COMPOSIO_API_KEY }}"
+
+      - name: Auto Post
+        run: bash scripts/auto-post.sh

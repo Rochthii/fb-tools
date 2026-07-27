@@ -1,0 +1,13 @@
+name: FB Analytics Report
+
+on:
+  workflow_dispatch:
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Analytics
+        run: bash scripts/analytics.sh

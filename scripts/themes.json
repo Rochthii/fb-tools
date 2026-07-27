@@ -1,0 +1,67 @@
+{
+  "tho_tinh": {
+    "label": "Thơ tình",
+    "topics": [
+      "nhớ người yêu xa", "thất tình", "yêu đơn phương",
+      "tỏ tình ngọt ngào", "ngày mưa nhớ ai", "lời chưa kịp nói",
+      "những điều nhỏ bé", "yêu thương âm thầm", "chia xa",
+      "một lần gặp gỡ"
+    ]
+  },
+  "tho_cuoc_song": {
+    "label": "Thơ cuộc sống",
+    "topics": [
+      "cà phê sáng", "góc phố quen", "chiều tan làm",
+      "tuổi trẻ", "hoài niệm", "Sài Gòn mưa",
+      "đường về nhà", "những điều bình dị", "mùa hè",
+      "ông mặt trời thức dậy"
+    ]
+  },
+  "tho_gia_dinh": {
+    "label": "Thơ gia đình",
+    "topics": [
+      "tình mẹ", "tình cha", "tình bạn thân",
+      "bữa cơm gia đình", "con cái", "ông bà",
+      "ngày chủ nhật", "những người thương yêu"
+    ]
+  },
+  "tho_tam_trang": {
+    "label": "Thơ tâm trạng",
+    "topics": [
+      "đêm khuya", "cô đơn", "lạc lõng giữa phố đông",
+      "mưa buồn", "ngồi nhìn đời", "tự đối thoại với chính mình",
+      "những suy tư"
+    ]
+  },
+  "tho_vui": {
+    "label": "Thơ vui",
+    "topics": [
+      "thả thính crush", "chuyện công sở", "lười đi làm",
+      "đi ăn đêm", "nỗi buồn hết tiền", "gen Z",
+      "tự sự của người độc thân", "chuyện mèo cún"
+    ]
+  },
+  "tho_truyen_cam_hung": {
+    "label": "Thơ truyền cảm hứng",
+    "topics": [
+      "ngày mới hy vọng", "vượt qua khó khăn", "tin vào bản thân",
+      "chữa lành", "bước tiếp", "ánh sáng cuối đường hầm",
+      "mạnh mẽ sau tổn thương"
+    ]
+  },
+  "danh_ngon": {
+    "label": "Danh ngôn",
+    "topics": [
+      "cuộc sống", "tình yêu", "hạnh phúc",
+      "sự nghiệp", "tình bạn", "lòng tốt",
+      "thời gian", "sự thay đổi"
+    ]
+  },
+  "truyen_ngan": {
+    "label": "Truyện ngắn",
+    "topics": [
+      "cuộc gặp gỡ tình cờ", "kỷ niệm tuổi thơ", "người lạ tốt bụng",
+      "bài học nhỏ", "câu chuyện dưới mưa", "món quà bất ngờ"
+    ]
+  }
+}
