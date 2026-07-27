@@ -2,7 +2,7 @@ name: FB Auto Post
 
 on:
   schedule:
-    - cron: '0 0 * * *'       # 7h sáng giờ VN (UTC+7 = 0:00 UTC)
+    - cron: '0 0,12 * * *'       # 7h sáng + 7h tối giờ VN (UTC+7)
   workflow_dispatch:
 
 jobs:

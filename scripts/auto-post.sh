@@ -52,9 +52,37 @@ with open('/tmp/ap_payload.json', 'w', encoding='utf-8') as f:
 PYEOF
 
 if [ -n "$IMG_URL" ]; then
-  $COMPOSIO execute FACEBOOK_CREATE_PHOTO_POST -d @/tmp/ap_payload.json
+  $COMPOSIO execute FACEBOOK_CREATE_PHOTO_POST -d @/tmp/ap_payload.json > /tmp/ap_result.json
 else
-  $COMPOSIO execute FACEBOOK_CREATE_POST -d @/tmp/ap_payload.json
+  $COMPOSIO execute FACEBOOK_CREATE_POST -d @/tmp/ap_payload.json > /tmp/ap_result.json
+fi
+
+POST_ID=$(python3 -c "
+import json
+with open('/tmp/ap_result.json') as f:
+    d = json.load(f)
+print(d.get('data', {}).get('post_id', '') or d.get('data', {}).get('id', ''))
+")
+echo "Post ID: $POST_ID"
+
+if [ -n "$POST_ID" ]; then
+  echo "4. Viet comment..."
+  $COMPOSIO execute GEMINI_GENERATE_CONTENT \
+    -d '{"prompt":"Viet 1 cau binh luan bang tieng Viet that tu nhien, am ap cho bai tho Facebook vua dang. Giong nhu nguoi doc chia se cam nhan. Them 1-2 hashtag. Chi tra ve phan binh luan, khong giai thich.","model":"gemini-2.5-flash","temperature":0.7}' \
+    2>/dev/null > /tmp/ap_comment_raw.json
+
+  COMMENT=$(python3 -c "
+import json
+with open('/tmp/ap_comment_raw.json') as f:
+    d = json.load(f)
+print(d.get('data', {}).get('text', '').strip())
+")
+
+  if [ -n "$COMMENT" ]; then
+    echo "Comment: $COMMENT"
+    echo "5. Dang comment..."
+    $COMPOSIO execute FACEBOOK_CREATE_COMMENT -d "{\"object_id\":\"$POST_ID\",\"message\":\"$COMMENT\"}"
+  fi
 fi
 
 echo "=== Xong ==="
