@@ -57,13 +57,13 @@ items = [{'genre': g, 'weight': int(w)} for g, w in zip(genres, weights)]
 print(json.dumps(items, ensure_ascii=False))
 ")
 
-SCHEDULE_PROMPT=$(python3 << PYEOF
-import json
-genres = """$GENRES_JSON"""
-topics_str = """$TOPIC_POOL"""
-insights = """$INSIGHTS_INFO"""
+SCHEDULE_PROMPT=$(PROJECT_NAME="$PROJECT_NAME" MODEL_TEXT="$MODEL_TEXT" GENRES_JSON="$GENRES_JSON" python3 << 'PYEOF'
+import json, os
+genres = os.environ['GENRES_JSON']
+project_name = os.environ['PROJECT_NAME']
+model_text = os.environ['MODEL_TEXT']
 
-prompt = f"""Bạn là chuyên gia lập lịch nội dung cho Facebook Page "viết vội vài câu" (dự án "{PROJECT_NAME}").
+prompt = f"""Bạn là chuyên gia lập lịch nội dung cho Facebook Page "viết vội vài câu" (dự án "{project_name}").
 
 Tạo lịch đăng bài cho 30 ngày tới, mỗi ngày 1 bài.
 Yêu cầu:
@@ -78,22 +78,17 @@ Danh sách thể loại (kèm weight):
 Trả về JSON array, mỗi phần tử có: day (1-30), genre (ten genre), topic (chủ đề), hour (khung gio), label (tên hiển thị tiếng Việt)
 Chỉ trả về JSON, không giải thích."""
 
-# Load genres for topic pool
-import json as j
-glist = j.loads(genres.replace("'",'"'))
-prompt += f"\n\nDanh sách thể loại: {j.dumps([g['genre'] for g in glist], ensure_ascii=False)}"
+try:
+    glist = json.loads(genres)
+    prompt += f"\n\nDanh sách thể loại: {json.dumps([g['genre'] for g in glist], ensure_ascii=False)}"
+except:
+    pass
 
-print(json.dumps({"prompt": prompt, "model": "$MODEL_TEXT", "temperature": 0.7}))
+print(json.dumps({"prompt": prompt, "model": model_text, "temperature": 0.7}))
 PYEOF
 )
 
 SCHEDULE_RAW=$($COMPOSIO execute GEMINI_GENERATE_CONTENT -d "$SCHEDULE_PROMPT" 2>/dev/null)
-
-# Parse AI output into clean JSON
-python3 << PYEOF
-import json
-with open('/dev/stdin', 'r') if False else None
-PYEOF
 
 SCHEDULE_JSON=$(echo "$SCHEDULE_RAW" | python3 -c "
 import json, sys, re
@@ -101,16 +96,14 @@ try:
     raw = sys.stdin.read()
     d = json.loads(raw)
     text = d.get('data', {}).get('text', '') or d.get('text', '')
-    # Extract JSON array from text
     match = re.search(r'\[.*\]', text, re.DOTALL)
     if match:
         schedule = json.loads(match.group())
         print(json.dumps(schedule, ensure_ascii=False))
     else:
-        print('[]')
+        print(json.dumps([], ensure_ascii=False))
 except Exception as e:
-    print('[]')
-    sys.stderr.write(str(e))
+    print(json.dumps([], ensure_ascii=False))
 " 2>/dev/null)
 
 # Validate schedule
@@ -150,12 +143,14 @@ print(json.dumps(d, ensure_ascii=False))
 
   echo "  Ngay $DAY ($GENRE): $TOPIC..."
 
-  # Build prompt for content generation
-  CONTENT_PROMPT=$(python3 << PYEOF
-import json
+  CONTENT_PROMPT=$(TOPIC="$TOPIC" MODEL_TEXT="$MODEL_TEXT" TEMPERATURE="$TEMPERATURE" python3 << 'PYEOF'
+import json, os
+topic = os.environ['TOPIC']
+model_text = os.environ['MODEL_TEXT']
+temperature = float(os.environ.get('TEMPERATURE', '0.9'))
 
 prompt = f"""Bạn là nhà thơ Việt Nam, viết cho Facebook Page "viết vội vài câu".
-Chủ đề hôm nay: {TOPIC}
+Chủ đề hôm nay: {topic}
 
 Viết 1 bài thơ tiếng Việt 4-8 câu.
 Phong cách: tự nhiên, nhẹ nhàng, giàu hình ảnh.
@@ -167,7 +162,7 @@ Sau đó thêm dòng: ANH: prompt tiếng Anh tạo ảnh minh họa (watercolor
 
 Chỉ viết nội dung, không giải thích."""
 
-print(json.dumps({"prompt": prompt, "model": "$MODEL_TEXT", "temperature": $TEMPERATURE}))
+print(json.dumps({"prompt": prompt, "model": model_text, "temperature": temperature}))
 PYEOF
   )
 
@@ -216,18 +211,23 @@ else:
   [ -z "$HASH_TAG" ] && HASH_TAG="#${LABEL// /} #tho #vietvoivaicau"
   [ -z "$IMG_PROMPT" ] && IMG_PROMPT="$STYLE_IMAGE"
 
-  # Save to schedule JSON
-  python3 << PYEOF
-import json
+  POST_BODY="$POST_BODY" HASH_TAG="$HASH_TAG" IMG_PROMPT="$IMG_PROMPT" LABEL="$LABEL" SCHEDULE_FILE="$SCHEDULE_FILE" IDX="$i" python3 << 'PYEOF'
+import json, os
+SCHEDULE_FILE = os.environ.get('SCHEDULE_FILE', '')
+i = int(os.environ.get('IDX', '0'))
+post_body = os.environ.get('POST_BODY', '')
+hash_tag = os.environ.get('HASH_TAG', '')
+img_prompt = os.environ.get('IMG_PROMPT', '')
+label = os.environ.get('LABEL', '')
 
-s = json.load(open('$SCHEDULE_FILE'))
-d = s[$i]
-d['text'] = """$POST_BODY"""
-d['hashtags'] = """$HASH_TAG"""
-d['image_prompt'] = """$IMG_PROMPT"""
-d['label'] = "$LABEL"
-s[$i] = d
-with open('$SCHEDULE_FILE', 'w', encoding='utf-8') as f:
+s = json.load(open(SCHEDULE_FILE))
+d = s[i]
+d['text'] = post_body
+d['hashtags'] = hash_tag
+d['image_prompt'] = img_prompt
+d['label'] = label
+s[i] = d
+with open(SCHEDULE_FILE, 'w', encoding='utf-8') as f:
     json.dump(s, f, ensure_ascii=False, indent=2)
 PYEOF
 
@@ -292,17 +292,16 @@ event_date = start + timedelta(days=day)
 print(event_date.strftime('%Y-%m-%d'))
 " 2>/dev/null)
 
-  # Escape content for JSON
   SUMMARY="[$PROJECT_NAME] $LABEL"
-  DESCRIPTION=$(python3 << PYEOF
-import json
+  DESCRIPTION=$(GENRE="$GENRE" TOPIC="$TOPIC" LABEL="$LABEL" POST_TEXT="$POST_TEXT" HASHTAGS="$HASHTAGS" IMG_PROMPT="$IMG_PROMPT" python3 << 'PYEOF'
+import json, os
 desc = json.dumps({
-    "genre": "$GENRE",
-    "topic": "$TOPIC",
-    "label": "$LABEL",
-    "text": """$POST_TEXT""",
-    "hashtags": """$HASHTAGS""",
-    "image_prompt": """$IMG_PROMPT"""
+    "genre": os.environ.get('GENRE', ''),
+    "topic": os.environ.get('TOPIC', ''),
+    "label": os.environ.get('LABEL', ''),
+    "text": os.environ.get('POST_TEXT', ''),
+    "hashtags": os.environ.get('HASHTAGS', ''),
+    "image_prompt": os.environ.get('IMG_PROMPT', '')
 }, ensure_ascii=False)
 print(desc)
 PYEOF
