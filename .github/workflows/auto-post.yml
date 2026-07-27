@@ -15,15 +15,14 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install & Auth & Post
+      - name: Setup Composio CLI
         env:
           COMPOSIO_INSTALL_PLUGINS: "0"
         run: |
-          set -e
           curl -fsSL https://raw.githubusercontent.com/ComposioHQ/composio/next/install.sh | bash
-          export PATH="$HOME/.composio:$PATH"
-          composio login --user-api-key "${{ secrets.COMPOSIO_API_KEY }}" --no-skill-install
-          which composio
-          composio --version
-          composio whoami 2>/dev/null || true
-          bash scripts/auto-post.sh
+          echo "$HOME/.composio" >> $GITHUB_PATH
+
+      - name: Auto Post
+        env:
+          COMPOSIO_API_KEY: ${{ secrets.COMPOSIO_API_KEY }}
+        run: bash scripts/auto-post.sh

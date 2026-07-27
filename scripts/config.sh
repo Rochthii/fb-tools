@@ -1,11 +1,14 @@
 PAGE_ID="1133589166515175"
 
-# Auto-detect composio: ưu tiên PATH (pip-installed), fallback Linux/WSL path
+# Auto-detect composio: PATH -> ~/.composio/ -> /root/.composio/
 COMPOSIO=""
-for c in "$(command -v composio 2>/dev/null)" "/root/.composio/composio" "/usr/local/bin/composio"; do
+for c in "$(command -v composio 2>/dev/null)" "$HOME/.composio/composio" "/root/.composio/composio" "/usr/local/bin/composio"; do
   [ -n "$c" ] && [ -x "$c" ] && { COMPOSIO="$c"; break; }
 done
-[ -z "$COMPOSIO" ] && COMPOSIO="/root/.composio/composio"
+[ -z "$COMPOSIO" ] && COMPOSIO="composio"
+
+# COMPOSIO_API_KEY must be set in environment (GitHub Secret or .env)
+# Facebook + Gemini must be connected via: composio link facebook
 
 MODEL_TEXT="gemini-2.5-flash"
 MODEL_IMAGE="gemini-2.5-flash-image"
