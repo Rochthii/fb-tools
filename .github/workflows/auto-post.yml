@@ -16,10 +16,18 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Composio
+      - name: Install Composio CLI
         run: |
-          pip install composio-core
+          npm install -g @composio/cli
           echo "COMPOSIO_API_KEY=${{ secrets.COMPOSIO_API_KEY }}" >> $GITHUB_ENV
 
+      - name: Auth
+        run: |
+          composio login --api-key "${{ secrets.COMPOSIO_API_KEY }}"
+          composio whoami
+
       - name: Auto Post
-        run: bash scripts/auto-post.sh
+        run: |
+          which composio
+          composio --version
+          bash scripts/auto-post.sh
