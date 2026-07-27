@@ -1,0 +1,23 @@
+name: FB Auto Post
+
+on:
+  schedule:
+    - cron: '0 0 * * *'       # 7h sáng giờ VN (UTC+7 = 0:00 UTC)
+  workflow_dispatch:
+
+jobs:
+  auto-post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Composio CLI
+        run: curl -fsSL https://composio.dev/install | bash
+
+      - name: Post to Facebook
+        env:
+          COMPOSIO_API_KEY: ${{ secrets.COMPOSIO_API_KEY }}
+        shell: bash
+        run: |
+          export PATH="$HOME/.composio:$PATH"
+          bash scripts/auto-post.sh
