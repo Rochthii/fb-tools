@@ -16,17 +16,12 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Composio CLI
-        run: pip install composio-core
-
-      - name: Debug
+      - name: Install Composio CLI (standalone)
         run: |
-          echo "PATH=$PATH"
-          which composio || echo "composio not in PATH"
-          python3 --version
-          bash --version
+          curl -fsSL https://composio.dev/install | bash
+          echo "$HOME/.composio/bin" >> $GITHUB_PATH
 
-      - name: Authenticate Composio
+      - name: Authenticate
         run: composio login --api-key "${{ secrets.COMPOSIO_API_KEY }}"
 
       - name: Auto Post
