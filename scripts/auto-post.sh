@@ -80,8 +80,15 @@ print(d.get('data', {}).get('text', '').strip())
 
   if [ -n "$COMMENT" ]; then
     echo "Comment: $COMMENT"
+    echo "$COMMENT" > /tmp/ap_comment.txt
     echo "5. Dang comment..."
-    $COMPOSIO execute FACEBOOK_CREATE_COMMENT -d "{\"object_id\":\"$POST_ID\",\"message\":\"$COMMENT\"}"
+    POST_ID="$POST_ID" python3 << 'PYEOF'
+import json, os
+comment = open('/tmp/ap_comment.txt', encoding='utf-8').read().strip()
+with open('/tmp/ap_comment_payload.json', 'w', encoding='utf-8') as f:
+    json.dump({'object_id': os.environ['POST_ID'], 'message': comment}, f, ensure_ascii=False)
+PYEOF
+    $COMPOSIO execute FACEBOOK_CREATE_COMMENT -d @/tmp/ap_comment_payload.json
   fi
 fi
 
