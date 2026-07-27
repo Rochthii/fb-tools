@@ -1,4 +1,10 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "instructions": ["AGENTS.md"]
+  "instructions": ["AGENTS.md"],
+  "references": {
+    "repo": {
+      "repository": "Rochthii/fb-tools",
+      "description": "Use for project file structure, config, and scripts"
+    }
+  }
 }

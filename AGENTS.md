@@ -1,12 +1,13 @@
 # fb-tools — viết vội vài câu
 
+> **GitHub**: https://github.com/Rochthii/fb-tools
+
 Auto đăng thơ, danh ngôn, truyện ngắn + ảnh lên Facebook Page, chạy GitHub Actions.
 
 ## Project info
 
 - **Page name**: viết vội vài câu
 - **Page ID**: 1133589166515175
-- **GitHub**: https://github.com/Rochthii/fb-tools
 - **Tech**: Composio (free tier) → Gemini 2.5 Flash (text) + Gemini 2.5 Flash Image
 - **Schedule**: GitHub Actions cron 4 lần/ngày (0,6,12,18h UTC) + manual trigger
 
