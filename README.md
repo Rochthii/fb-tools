@@ -6,7 +6,8 @@ Auto post bài lên Facebook Page **Bài Học Hôm Nay** bằng Composio CLI + 
 
 | Script | Mô tả |
 |--------|-------|
-| `auto-post.sh` | 🤖 Tự động: chọn chủ đề → viết bài → tạo ảnh → đăng |
+| `auto-post.sh` | 🤖 Tự động: chọn chủ đề → làm thơ → tạo ảnh → đăng |
+| `comment-post.sh` | Bình luận dưới bài viết (kèm link/ảnh) |
 | `post-text.sh` | Đăng bài text |
 | `post-image.sh` | Tạo ảnh Gemini + đăng kèm bài |
 | `quick-post.sh` | Đăng nhanh 1 câu |
