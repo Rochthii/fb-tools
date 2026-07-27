@@ -22,10 +22,7 @@ jobs:
           set -e
           curl -fsSL https://raw.githubusercontent.com/ComposioHQ/composio/next/install.sh | bash
           export PATH="$HOME/.composio:$PATH"
-          composio login --api-key "${{ secrets.COMPOSIO_API_KEY }}" || {
-            echo "Login failed, trying env var approach..."
-            echo "COMPOSIO_API_KEY=${{ secrets.COMPOSIO_API_KEY }}" >> $GITHUB_ENV
-          }
+          composio login --user-api-key "${{ secrets.COMPOSIO_API_KEY }}" --no-skill-install
           which composio
           composio --version
           composio whoami 2>/dev/null || true
