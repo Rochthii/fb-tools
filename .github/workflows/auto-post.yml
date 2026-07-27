@@ -11,23 +11,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install Composio CLI
+      - name: Install & Auth & Post
         run: |
-          npm install -g @composio/cli
-          echo "COMPOSIO_API_KEY=${{ secrets.COMPOSIO_API_KEY }}" >> $GITHUB_ENV
-
-      - name: Auth
-        run: |
+          set -e
+          curl -fsSL https://raw.githubusercontent.com/ComposioHQ/composio/next/install.sh | bash
+          export PATH="$HOME/.composio/bin:$PATH"
           composio login --api-key "${{ secrets.COMPOSIO_API_KEY }}"
           composio whoami
-
-      - name: Auto Post
-        run: |
-          which composio
-          composio --version
           bash scripts/auto-post.sh
