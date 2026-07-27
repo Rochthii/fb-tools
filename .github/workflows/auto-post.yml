@@ -19,6 +19,13 @@ jobs:
       - name: Install Composio CLI
         run: pip install composio-core
 
+      - name: Debug
+        run: |
+          echo "PATH=$PATH"
+          which composio || echo "composio not in PATH"
+          python3 --version
+          bash --version
+
       - name: Authenticate Composio
         run: composio login --api-key "${{ secrets.COMPOSIO_API_KEY }}"
 

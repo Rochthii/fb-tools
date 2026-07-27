@@ -1,5 +1,11 @@
 PAGE_ID="1133589166515175"
-COMPOSIO="/root/.composio/composio"
+
+# Auto-detect composio: ưu tiên PATH (pip-installed), fallback Linux/WSL path
+COMPOSIO=""
+for c in "$(command -v composio 2>/dev/null)" "/root/.composio/composio" "/usr/local/bin/composio"; do
+  [ -n "$c" ] && [ -x "$c" ] && { COMPOSIO="$c"; break; }
+done
+[ -z "$COMPOSIO" ] && COMPOSIO="/root/.composio/composio"
 
 MODEL_TEXT="gemini-2.5-flash"
 MODEL_IMAGE="gemini-2.5-flash-image"
