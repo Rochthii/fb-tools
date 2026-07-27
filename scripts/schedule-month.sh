@@ -88,7 +88,12 @@ print(json.dumps({"prompt": prompt, "model": model_text, "temperature": 0.7}))
 PYEOF
 )
 
-SCHEDULE_RAW=$($COMPOSIO execute GEMINI_GENERATE_CONTENT -d "$SCHEDULE_PROMPT" 2>/dev/null)
+echo "$SCHEDULE_PROMPT" > /tmp/ag_schedule_prompt.json
+SCHEDULE_RAW=$($COMPOSIO execute GEMINI_GENERATE_CONTENT -d @/tmp/ag_schedule_prompt.json 2>/tmp/ag_stderr.log)
+COM_EXIT=$?
+echo "$SCHEDULE_RAW" > /tmp/ag_raw_response.json
+echo "$COM_EXIT" > /tmp/ag_exit_code.txt
+cat /tmp/ag_stderr.log >&2
 
 SCHEDULE_JSON=$(echo "$SCHEDULE_RAW" | python3 -c "
 import json, sys, re
@@ -96,13 +101,17 @@ try:
     raw = sys.stdin.read()
     d = json.loads(raw)
     text = d.get('data', {}).get('text', '') or d.get('text', '')
+    if not text:
+        dd = d.get('data', {})
+        if isinstance(dd, dict):
+            text = dd.get('text', '') or dd.get('data', '')
     match = re.search(r'\[.*\]', text, re.DOTALL)
     if match:
         schedule = json.loads(match.group())
         print(json.dumps(schedule, ensure_ascii=False))
     else:
         print(json.dumps([], ensure_ascii=False))
-except Exception as e:
+except:
     print(json.dumps([], ensure_ascii=False))
 " 2>/dev/null)
 
@@ -166,7 +175,8 @@ print(json.dumps({"prompt": prompt, "model": model_text, "temperature": temperat
 PYEOF
   )
 
-  CONTENT_RAW=$($COMPOSIO execute GEMINI_GENERATE_CONTENT -d "$CONTENT_PROMPT" 2>/dev/null)
+  echo "$CONTENT_PROMPT" > /tmp/ag_content_${i}.json
+  CONTENT_RAW=$($COMPOSIO execute GEMINI_GENERATE_CONTENT -d @/tmp/ag_content_${i}.json 2>/dev/null)
   CONTENT_TEXT=$(echo "$CONTENT_RAW" | python3 -c "
 import json, sys
 try:
