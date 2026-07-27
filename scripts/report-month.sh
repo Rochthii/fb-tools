@@ -44,9 +44,11 @@ while IFS=',' read -r DATE LABEL TOPIC POST_ID PREVIEW; do
     continue
   fi
 
-  INSIGHT_RAW=$($COMPOSIO execute FACEBOOK_GET_POST_INSIGHTS \
-    --post_id "$POST_ID" \
-    2>/dev/null)
+  POST_ID="$POST_ID" python3 > /tmp/ag_insight_payload.json << 'PYEOF'
+import json, os
+print(json.dumps({"post_id": os.environ.get('POST_ID', '')}, ensure_ascii=False))
+PYEOF
+  INSIGHT_RAW=$($COMPOSIO execute FACEBOOK_GET_POST_INSIGHTS -d @/tmp/ag_insight_payload.json 2>/dev/null)
 
   METRICS=$(echo "$INSIGHT_RAW" | python3 -c "
 import json, sys
@@ -145,11 +147,16 @@ Tu dong tao boi $PROJECT_NAME
 https://github.com/Rochthii/fb-tools"
 
 # Gửi email qua Composio Gmail
-EMAIL_RESULT=$($COMPOSIO execute GMAIL_SEND_EMAIL \
-  --to "$REPORT_EMAIL" \
-  --subject "[$PROJECT_NAME] Bao cao thang" \
-  --body "$REPORT_BODY" \
-  2>/dev/null)
+REPORT_EMAIL="$REPORT_EMAIL" PROJECT_NAME="$PROJECT_NAME" REPORT_BODY="$REPORT_BODY" python3 > /tmp/ag_email_payload.json << 'PYEOF'
+import json, os
+payload = {
+    "recipient_email": os.environ.get('REPORT_EMAIL', ''),
+    "subject": f"[{os.environ.get('PROJECT_NAME', '')}] Bao cao thang",
+    "body": os.environ.get('REPORT_BODY', '')
+}
+print(json.dumps(payload, ensure_ascii=False))
+PYEOF
+EMAIL_RESULT=$($COMPOSIO execute GMAIL_SEND_EMAIL -d @/tmp/ag_email_payload.json 2>/dev/null)
 
 SENT=$(echo "$EMAIL_RESULT" | python3 -c "
 import json, sys

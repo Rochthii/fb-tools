@@ -19,10 +19,16 @@ mkdir -p "$DIR/../logs" 2>/dev/null || true
 
 # ---- 1. Facebook Insights (thong tin tham khao) ----
 echo "1. Thu thap du lieu tu Facebook Insights..."
-INSIGHTS_RAW=$($COMPOSIO execute FACEBOOK_GET_PAGE_INSIGHTS \
-  --page_id "$PAGE_ID" \
-  --metric "page_impressions_unique,page_engaged_users" \
-  --period "days_28" 2>/dev/null)
+PAGE_ID="$PAGE_ID" python3 > /tmp/ag_insights_payload.json << 'PYEOF'
+import json, os
+payload = {
+    "page_id": os.environ.get('PAGE_ID', ''),
+    "metrics": "page_impressions_unique,page_engaged_users",
+    "period": "days_28"
+}
+print(json.dumps(payload, ensure_ascii=False))
+PYEOF
+INSIGHTS_RAW=$($COMPOSIO execute FACEBOOK_GET_PAGE_INSIGHTS -d @/tmp/ag_insights_payload.json 2>/dev/null)
 
 INSIGHTS_INFO=$(echo "$INSIGHTS_RAW" | python3 -c "
 import json, sys
@@ -319,14 +325,20 @@ PYEOF
 
   START_DATETIME="${EVENT_DATE}T${HOUR}:00:00+07:00"
 
-  RESULT=$($COMPOSIO execute GOOGLECALENDAR_CREATE_EVENT \
-    --calendar_id "$CALENDAR_ID" \
-    --summary "$SUMMARY" \
-    --description "$DESCRIPTION" \
-    --start_datetime "$START_DATETIME" \
-    --event_duration_minutes 15 \
-    --timezone "$TIMEZONE" \
-    2>/dev/null)
+  CALENDAR_ID="$CALENDAR_ID" SUMMARY="$SUMMARY" DESCRIPTION="$DESCRIPTION" START_DATETIME="$START_DATETIME" TIMEZONE="$TIMEZONE" python3 > /tmp/ag_cal_event.json << 'PYEOF'
+import json, os
+payload = {
+    "calendar_id": os.environ.get('CALENDAR_ID', 'primary'),
+    "summary": os.environ.get('SUMMARY', ''),
+    "description": os.environ.get('DESCRIPTION', ''),
+    "start_datetime": os.environ.get('START_DATETIME', ''),
+    "event_duration_minutes": 15,
+    "timezone": os.environ.get('TIMEZONE', 'UTC'),
+    "create_meeting_room": False
+}
+print(json.dumps(payload, ensure_ascii=False))
+PYEOF
+  RESULT=$($COMPOSIO execute GOOGLECALENDAR_CREATE_EVENT -d @/tmp/ag_cal_event.json 2>/dev/null)
 
   EVENT_ID=$(echo "$RESULT" | python3 -c "
 import json, sys
@@ -353,4 +365,4 @@ echo "  Lich 30 ngay: $SCHEDULE_FILE"
 echo "  Calendar events: $CALENDAR_EVENTS/$TOTAL_DAYS"
 echo ""
 echo "De kiem tra calendar:"
-echo "  composio execute GOOGLECALENDAR_EVENTS_LIST --calendar_id $CALENDAR_ID --time_min \"${START_DATE}T00:00:00+07:00\" --order_by startTime --single_events true"
+echo "  ~/.composio/composio execute GOOGLECALENDAR_EVENTS_LIST -d '{\"calendarId\":\"$CALENDAR_ID\",\"timeMin\":\"${START_DATE}T00:00:00+07:00\",\"orderBy\":\"startTime\",\"singleEvents\":true}'"

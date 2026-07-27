@@ -36,13 +36,18 @@ TOMORROW=$(date -d "+1 day" +%Y-%m-%d)
 TIME_MIN="${TODAY}T00:00:00+07:00"
 TIME_MAX="${TOMORROW}T00:00:00+07:00"
 
-EVENTS_RAW=$($COMPOSIO execute GOOGLECALENDAR_EVENTS_LIST \
-  --calendar_id "$CALENDAR_ID" \
-  --time_min "$TIME_MIN" \
-  --time_max "$TIME_MAX" \
-  --order_by "startTime" \
-  --single_events true \
-  2>/dev/null)
+CALENDAR_ID="$CALENDAR_ID" TIME_MIN="$TIME_MIN" TIME_MAX="$TIME_MAX" python3 > /tmp/ag_events_payload.json << 'PYEOF'
+import json, os
+payload = {
+    "calendarId": os.environ.get('CALENDAR_ID', 'primary'),
+    "timeMin": os.environ.get('TIME_MIN', ''),
+    "timeMax": os.environ.get('TIME_MAX', ''),
+    "orderBy": "startTime",
+    "singleEvents": True
+}
+print(json.dumps(payload, ensure_ascii=False))
+PYEOF
+EVENTS_RAW=$($COMPOSIO execute GOOGLECALENDAR_EVENTS_LIST -d @/tmp/ag_events_payload.json 2>/dev/null)
 
 SCHEDULE_DATA=$(echo "$EVENTS_RAW" | python3 -c "
 import json, sys
