@@ -95,12 +95,16 @@ PYEOF
 )
 
 echo "$SCHEDULE_PROMPT" > /tmp/ag_schedule_prompt.json
-SCHEDULE_RAW=$($COMPOSIO execute GEMINI_GENERATE_CONTENT -d @/tmp/ag_schedule_prompt.json 2>/tmp/ag_stderr.log)
+echo "[DEBUG] Prompt file: $(wc -c < /tmp/ag_schedule_prompt.json) bytes, exists=$(test -f /tmp/ag_schedule_prompt.json && echo yes || echo no)"
+echo "[DEBUG] Prompt first 300: $(head -c 300 /tmp/ag_schedule_prompt.json | cat -v)"
+echo "[DEBUG] COMPOSIO=$COMPOSIO"
+SCHEDULE_RAW=$($COMPOSIO execute GEMINI_GENERATE_CONTENT -d @/tmp/ag_schedule_prompt.json 2>/tmp/ag_stderr.log) && echo "[DEBUG] composio OK" || echo "[DEBUG] composio FAIL"
 COM_EXIT=$?
 echo "$SCHEDULE_RAW" > /tmp/ag_raw_response.json
 echo "$COM_EXIT" > /tmp/ag_exit_code.txt
 STDERR_LOG=$(cat /tmp/ag_stderr.log)
 [ -n "$STDERR_LOG" ] && echo "[STDERR] $STDERR_LOG"
+echo "[DEBUG] RAW bytes: $(wc -c < /tmp/ag_raw_response.json)"
 
 SCHEDULE_JSON=$(echo "$SCHEDULE_RAW" | python3 -c "
 import json, sys, re
